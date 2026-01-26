@@ -1,27 +1,28 @@
 import telebot
 
-# --- CONFIGURACIÓN DE SEGURIDAD ---
-# Pon tu token entre las comillas
+# --- CONFIGURACIÓN DEFINITIVA ---
+# Pon tu Token real aquí (mantén las comillas)
 TOKEN = "7991523120:AAGeQYuWAdkVcNUFWwa7h71dmx9S_s1qZFA" 
 
-# IDs numéricos corregidos (IMPORTANTE: Sin comillas para que funcionen)
-ADMIN_YAYO = 6391483842
-ADMIN_SOCIA = 6953926084
+# IDs correctos (SIN COMILLAS para evitar Error 400)
+ADMIN_YAYO = 6578945006
+ADMIN_SOCIA = 6533031969
 # ----------------------------------
 
 bot = telebot.TeleBot(TOKEN)
 
 def enviar_aviso(mensaje):
-    """Envía un reporte a los supervisores."""
+    """Envía un reporte directo a Luis y Estefania."""
     try:
-        # Envío directo usando los números corregidos
+        # Envío a Luis
         bot.send_message(ADMIN_YAYO, f"🤖 [Z-BOT PADRE]:\n{mensaje}")
+        # Envío a Estefania
         bot.send_message(ADMIN_SOCIA, f"🤖 [Z-BOT PADRE]:\n{mensaje}")
     except Exception as e:
-        print(f"❌ Error enviando a Telegram: {e}")
+        print(f"❌ Error de conexión con Telegram: {e}")
 
 def iniciar_escucha():
-    """Activa la respuesta a comandos."""
+    """Activa los comandos para interactuar con el bot."""
     @bot.message_handler(commands=['start', 'hola'])
     def saludar(message):
         bot.reply_to(message, "Saludos, Supervisor. Z-Bot está en línea 🇩🇴.")
