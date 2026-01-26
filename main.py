@@ -1,22 +1,23 @@
-from brain.core import ZBotPadreV2
-from brain.data_engine import preparar_datos_mercado
+import time
+# Importamos el motor y la lista de monedas
+from brain.data_engine import preparar_datos_mercado, QUINTETO
 
-def ejecutar_cerebro(datos_brutos):
-    """
-    Punto de entrada principal para el Bot-Padre V2.
-    """
-    # 1. Inicializar el cerebro para BTC
-    cerebro = ZBotPadreV2(symbol="BTCUSDT")
-    
-    # 2. Procesar los datos recibidos (EMA, RSI)
-    df_listo = preparar_datos_mercado(datos_brutos)
-    
-    # 3. Obtener la decisión de la Estrategia V1.0
-    decision = cerebro.analizar_estrategia_v1(df_listo)
-    
-    # 4. Mostrar reporte (Regla de la Matrix: Auditoría evaluada)
-    print(f"🧠 REPORTE CEREBRO: {decision}")
-    return decision
+print("🚀 Ecosistema Z-Bot: Iniciando Quinteto de Poder...")
 
-if __name__ == "__main__":
-    print("🚀 Ecosistema Z-Bot: Cerebro encendido y esperando datos...")
+while True:
+    for moneda in QUINTETO:
+        print(f"\n🔍 Analizando {moneda}...")
+        
+        # Por ahora enviamos una lista vacía para probar la conexión del motor
+        # En la siguiente fase conectaremos la API real aquí
+        datos_simulados = [] 
+        
+        df = preparar_datos_mercado(moneda, datos_simulados)
+        
+        if df.empty:
+            print(f"⚠️ {moneda}: Esperando flujo de datos reales...")
+        else:
+            print(f"✅ Memoria enriquecida para {moneda}")
+
+    print("\n⏳ Ciclo completado. Reintentando en 10 segundos...")
+    time.sleep(10)
