@@ -1,35 +1,41 @@
 import telebot
+from brain.data_engine import fetch_candles, preparar_datos_mercado, QUINTETO
 
-# --- CONFIGURACIÓN DEFINITIVA ---
-# Pon tu Token real aquí (mantén las comillas)
+# --- CONFIGURACIÓN ---
 TOKEN = "7991523120:AAGeQYuWAdkVcNUFWwa7h71dmx9S_s1qZFA" 
-
-# IDs correctos (SIN COMILLAS para evitar Error 400)
 ADMIN_YAYO = 6578945006
 ADMIN_SOCIA = 6533031969
-# ----------------------------------
+# ---------------------
 
 bot = telebot.TeleBot(TOKEN)
 
 def enviar_aviso(mensaje):
-    """Envía un reporte directo a Luis y Estefania."""
+    """Solo para errores críticos del sistema."""
     try:
-        # Envío a Luis
-        bot.send_message(ADMIN_YAYO, f"🤖 [Z-BOT PADRE]:\n{mensaje}")
-        # Envío a Estefania
-        bot.send_message(ADMIN_SOCIA, f"🤖 [Z-BOT PADRE]:\n{mensaje}")
+        bot.send_message(ADMIN_YAYO, f"🤖 [Z-BOT]: {mensaje}")
     except Exception as e:
-        print(f"❌ Error de conexión con Telegram: {e}")
+        print(f"❌ Error Telegram: {e}")
+
+@bot.message_handler(commands=['reporte', 'status'])
+def enviar_reporte_manual(message):
+    """Esta función solo se activa si tú escribes /reporte en Telegram."""
+    if message.chat.id not in [ADMIN_YAYO, ADMIN_SOCIA]:
+        return
+
+    bot.reply_to(message, "📊 Generando reporte del Quinteto para el Supervisor...")
+    
+    informe = "📈 **ESTADO ACTUAL DEL MERCADO**\n\n"
+    for symbol in QUINTETO:
+        velas = fetch_candles(symbol)
+        if velas:
+            df = preparar_datos_mercado(symbol, velas)
+            if not df.empty:
+                precio = df['close'].iloc[-1]
+                rsi = round(df['rsi'].iloc[-1], 2)
+                informe += f"🔹 {symbol}: ${precio} | RSI: {rsi}\n"
+    
+    bot.send_message(message.chat.id, informe)
 
 def iniciar_escucha():
-    """Activa los comandos para interactuar con el bot."""
-    @bot.message_handler(commands=['start', 'hola'])
-    def saludar(message):
-        bot.reply_to(message, "Saludos, Supervisor. Z-Bot está en línea 🇩🇴.")
-
-    @bot.message_handler(commands=['status'])
-    def enviar_status(message):
-        bot.reply_to(message, "Estado: Operativo. Motor: Kraken. ✅")
-
-    print("📢 Voz de Telegram activada...")
-    bot.polling(non_stop=True, timeout=20)
+    print("📢 Z-Bot esperando tus órdenes en Telegram...")
+    bot.polling(non_stop=True)
