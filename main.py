@@ -1,23 +1,25 @@
 import time
-# Importamos el motor y la lista de monedas
-from brain.data_engine import preparar_datos_mercado, QUINTETO
+# Importamos las funciones optimizadas
+from brain.data_engine import fetch_candles, preparar_datos_mercado, QUINTETO
 
-print("🚀 Ecosistema Z-Bot: Iniciando Quinteto de Poder...")
+print("🚀 Ecosistema Z-Bot: Iniciando Bots Observadores (V1.1)...")
 
 while True:
     for moneda in QUINTETO:
         print(f"\n🔍 Analizando {moneda}...")
         
-        # Por ahora enviamos una lista vacía para probar la conexión del motor
-        # En la siguiente fase conectaremos la API real aquí
-        datos_simulados = [] 
+        # 1. Succión rápida de velas reales
+        datos_raw = fetch_candles(moneda)
         
-        df = preparar_datos_mercado(moneda, datos_simulados)
+        # 2. Procesamiento de indicadores y guardado en memoria CSV
+        df = preparar_datos_mercado(moneda, datos_raw)
         
-        if df.empty:
-            print(f"⚠️ {moneda}: Esperando flujo de datos reales...")
+        if not df.empty:
+            precio = df['close'].iloc[-1]
+            rsi = df['rsi'].iloc[-1]
+            print(f"✅ {moneda} en memoria. Precio: ${precio} | RSI: {rsi:.2f}")
         else:
-            print(f"✅ Memoria enriquecida para {moneda}")
+            print(f"❌ {moneda}: Fallo al obtener o procesar datos.")
 
-    print("\n⏳ Ciclo completado. Reintentando en 10 segundos...")
-    time.sleep(10)
+    print("\n⏳ Ciclo completado. Reposando 1 minuto...")
+    time.sleep(60)
