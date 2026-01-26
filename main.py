@@ -1,25 +1,35 @@
 import time
-# Importamos las funciones optimizadas
 from brain.data_engine import fetch_candles, preparar_datos_mercado, QUINTETO
+from brain.telegram_engine import enviar_aviso
 
-print("🚀 Ecosistema Z-Bot: Iniciando Bots Observadores (V1.1)...")
+def ejecutar_ciclo():
+    print("\n🚀 Z-Bot Padre: Iniciando ciclo de vigilancia...")
+    # Aviso de arranque a Telegram
+    enviar_aviso("⚡ Sistema de vigilancia activado. Analizando el Quinteto...")
 
-while True:
-    for moneda in QUINTETO:
-        print(f"\n🔍 Analizando {moneda}...")
+    for symbol in QUINTETO:
+        print(f"🔍 Analizando {symbol}...")
+        velas = fetch_candles(symbol)
         
-        # 1. Succión rápida de velas reales
-        datos_raw = fetch_candles(moneda)
+        if velas:
+            df = preparar_datos_mercado(symbol, velas)
+            if not df.empty:
+                ultimo_precio = df['close'].iloc[-1]
+                ultimo_rsi = round(df['rsi'].iloc[-1], 2)
+                
+                print(f"✅ {symbol} en memoria. Precio: ${ultimo_precio} | RSI: {ultimo_rsi}")
+                
+                # Reporte opcional a Telegram
+                # enviar_aviso(f"📊 {symbol}\nPrecio: ${ultimo_precio}\nRSI: {ultimo_rsi}")
         
-        # 2. Procesamiento de indicadores y guardado en memoria CSV
-        df = preparar_datos_mercado(moneda, datos_raw)
-        
-        if not df.empty:
-            precio = df['close'].iloc[-1]
-            rsi = df['rsi'].iloc[-1]
-            print(f"✅ {moneda} en memoria. Precio: ${precio} | RSI: {rsi:.2f}")
-        else:
-            print(f"❌ {moneda}: Fallo al obtener o procesar datos.")
+    print("⌛ Ciclo completado. Reposando 1 minuto...")
 
-    print("\n⏳ Ciclo completado. Reposando 1 minuto...")
-    time.sleep(60)
+if __name__ == "__main__":
+    while True:
+        try:
+            ejecutar_ciclo()
+            time.sleep(60) 
+        except Exception as e:
+            print(f"❌ Error en el bucle principal: {e}")
+            enviar_aviso(f"⚠️ Error crítico en el bot: {e}")
+            time.sleep(30)
