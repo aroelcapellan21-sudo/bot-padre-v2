@@ -1,1 +1,1 @@
-print('Bot padre v2: iniciando analisis del ecosistema...')
+print("Bot Padre: Sistema activo y listo.")
