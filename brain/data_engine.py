@@ -1,32 +1,52 @@
 import pandas as pd
 import pandas_ta as ta
-import os
+import ccxt
 
-# Lista de seguimiento definida por el usuario (Quinteto de Poder)
+# 1. PARAMETRIZACIÓN DINÁMICA
+EMA_LONG = 200
+EMA_SHORT = 50
+RSI_PERIOD = 14
 QUINTETO = ["BTC", "ETH", "SOL", "BNB", "AVAX"]
 
-def preparar_datos_mercado(symbol, velas_raw):
-    """
-    Transforma velas crudas en datos con indicadores y guarda memoria histórica.
-    """
+# 2. CONEXIÓN Y CARGA RÁPIDA DE MERCADOS
+exchange = ccxt.binance()
+MARKETS = exchange.load_markets() # Esto es lo que optimiza la velocidad
+
+def fetch_candles(symbol, timeframe='1h', limit=500):
+    """Obtiene velas usando la caché de mercados para evitar sobrecarga."""
     try:
-        # 1. Crear DataFrame y asegurar tipos numéricos
+        par = f"{symbol}/USDT"
+        if par not in MARKETS:
+            print(f"⚠️ {par} no disponible.")
+            return []
+            
+        return exchange.fetch_ohlcv(par, timeframe=timeframe, limit=limit)
+    except Exception as e:
+        print(f"⚠️ Error de conexión {symbol}: {e}")
+        return []
+
+def preparar_datos_mercado(symbol, velas_raw):
+    """Procesa indicadores y genera memoria legible con datetime."""
+    try:
+        if not velas_raw: return pd.DataFrame()
+            
         df = pd.DataFrame(velas_raw, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        
+        # Conversión a fecha legible para humanos
+        df['datetime'] = pd.to_datetime(df['timestamp'], unit='ms')
+        
         for col in ['open', 'high', 'low', 'close', 'volume']:
             df[col] = df[col].astype(float)
         
-        # 2. Calcular Indicadores (Estrategia V1.0)
-        df['ema_200'] = ta.ema(df['close'], length=200)
-        df['ema_50'] = ta.ema(df['close'], length=50)
-        df['rsi'] = ta.rsi(df['close'], length=14)
+        # Cálculo de Indicadores (Usando los parámetros definidos arriba)
+        df[f'ema_{EMA_LONG}'] = ta.ema(df['close'], length=EMA_LONG)
+        df[f'ema_{EMA_SHORT}'] = ta.ema(df['close'], length=EMA_SHORT)
+        df['rsi'] = ta.rsi(df['close'], length=RSI_PERIOD)
         
-        # 3. ENRIQUECER MEMORIA: Guardar datos en archivo local
-        nombre_archivo = f"memory_{symbol}.csv"
-        df.to_csv(nombre_archivo, index=False)
+        # Persistencia: Guardar en CSV para crear la memoria del organismo
+        df.to_csv(f"memory_{symbol}.csv", index=False)
         
-        # 4. Limpiar valores nulos y retornar
         return df.dropna()
-        
     except Exception as e:
-        print(f"⚠️ AVISO ECOSISTEMA: Error en Motor de Datos ({symbol}): {e}")
+        print(f"⚠️ Error procesando {symbol}: {e}")
         return pd.DataFrame()
