@@ -10,7 +10,7 @@ ADMIN_SOCIA = 6533031969
 bot = telebot.TeleBot(TOKEN)
 
 def enviar_aviso(mensaje):
-    """Solo para errores críticos del sistema."""
+    """Solo para avisos del sistema, no para spam de precios."""
     try:
         bot.send_message(ADMIN_YAYO, f"🤖 [Z-BOT]: {mensaje}")
     except Exception as e:
@@ -18,7 +18,7 @@ def enviar_aviso(mensaje):
 
 @bot.message_handler(commands=['reporte', 'status'])
 def enviar_reporte_manual(message):
-    """Esta función solo se activa si tú escribes /reporte en Telegram."""
+    """Esta función solo responde si escribes /reporte o /status en Telegram."""
     if message.chat.id not in [ADMIN_YAYO, ADMIN_SOCIA]:
         return
 
@@ -37,5 +37,5 @@ def enviar_reporte_manual(message):
     bot.send_message(message.chat.id, informe)
 
 def iniciar_escucha():
-    print("📢 Z-Bot esperando tus órdenes en Telegram...")
+    print("📢 Z-Bot esperando órdenes en Telegram...")
     bot.polling(non_stop=True)
