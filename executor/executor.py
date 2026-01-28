@@ -13,7 +13,7 @@ Solo ejecuta órdenes que ya son legales.
 from shared.schema import validate_signal, SignalValidationError
 
 
-def execute(signal: dict) -> None:
+def execute(signal: dict, signal_path: str) -> None:
     """
     Ejecuta una señal solo si es legal.
     Si no lo es, muere legalmente.
